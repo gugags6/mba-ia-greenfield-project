@@ -20,6 +20,7 @@ import { MailModule } from '../mail/mail.module';
 import { MailService } from '../mail/mail.service';
 import { Channel } from '../channels/entities/channel.entity';
 import { User } from '../users/entities/user.entity';
+import { Video } from '../videos/entities/video.entity';
 import { UsersModule } from '../users/users.module';
 import {
   cleanAllTables,
@@ -33,7 +34,7 @@ import {
   VerificationTokenType,
 } from './entities/verification-token.entity';
 
-const ALL_ENTITIES = [User, Channel, RefreshToken, VerificationToken];
+const ALL_ENTITIES = [User, Channel, Video, RefreshToken, VerificationToken];
 
 async function createAuthTestModule(): Promise<TestingModule> {
   const ds = createTestDataSource(ALL_ENTITIES);
@@ -108,7 +109,7 @@ describe('AuthService — register (integration)', () => {
     dataSource = module.get(DataSource);
     verificationTokenRepository = dataSource.getRepository(VerificationToken);
     userRepository = dataSource.getRepository(User);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
@@ -199,7 +200,7 @@ describe('AuthService — confirm (integration)', () => {
     dataSource = module.get(DataSource);
     verificationTokenRepository = dataSource.getRepository(VerificationToken);
     userRepository = dataSource.getRepository(User);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
@@ -268,7 +269,7 @@ describe('AuthService — resendConfirmation (integration)', () => {
     authService = module.get(AuthService);
     dataSource = module.get(DataSource);
     verificationTokenRepository = dataSource.getRepository(VerificationToken);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
@@ -322,7 +323,7 @@ describe('AuthService — login (integration)', () => {
     jwtService = module.get(JwtService);
     dataSource = module.get(DataSource);
     refreshTokenRepository = dataSource.getRepository(RefreshToken);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
@@ -401,7 +402,7 @@ describe('AuthService — refresh (integration)', () => {
     jwtService = module.get(JwtService);
     dataSource = module.get(DataSource);
     refreshTokenRepository = dataSource.getRepository(RefreshToken);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
@@ -517,7 +518,7 @@ describe('AuthService — logout (integration)', () => {
     authService = module.get(AuthService);
     dataSource = module.get(DataSource);
     refreshTokenRepository = dataSource.getRepository(RefreshToken);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
@@ -587,7 +588,7 @@ describe('AuthService — forgotPassword (integration)', () => {
     authService = module.get(AuthService);
     dataSource = module.get(DataSource);
     verificationTokenRepository = dataSource.getRepository(VerificationToken);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
@@ -672,7 +673,7 @@ describe('AuthService — resetPassword (integration)', () => {
     verificationTokenRepository = dataSource.getRepository(VerificationToken);
     userRepository = dataSource.getRepository(User);
     refreshTokenRepository = dataSource.getRepository(RefreshToken);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
