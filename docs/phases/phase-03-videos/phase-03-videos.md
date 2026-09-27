@@ -492,20 +492,20 @@ SI-03.5 (root — fila BullMQ + worker bootstrap, independente)
 
 ## Deliverables
 
-- [ ] SI-03.1 — Criar entidade Video
-- [ ] SI-03.2 — Infra: StorageService (MinIO/S3)
-- [ ] SI-03.3 — Endpoint POST /videos/upload-intent
-- [ ] SI-03.4 — Endpoint POST /videos/:slug/confirm-upload
-- [ ] SI-03.5 — Infra: fila BullMQ + bootstrap do worker
-- [ ] SI-03.6 — Worker: extração de metadados via ffprobe + validação de formato
-- [ ] SI-03.7 — Worker: geração de thumbnail via ffmpeg
-- [ ] SI-03.8 — Endpoint GET /videos/:slug
-- [ ] SI-03.9 — Endpoints GET /videos/:slug/stream e /download
-- [ ] SI-03.10 — Job de limpeza de rascunhos abandonados
+- [x] SI-03.1 — Criar entidade Video
+- [x] SI-03.2 — Infra: StorageService (MinIO/S3)
+- [x] SI-03.3 — Endpoint POST /videos/upload-intent
+- [x] SI-03.4 — Endpoint POST /videos/:slug/confirm-upload
+- [x] SI-03.5 — Infra: fila BullMQ + bootstrap do worker
+- [x] SI-03.6 — Worker: extração de metadados via ffprobe + validação de formato
+- [x] SI-03.7 — Worker: geração de thumbnail via ffmpeg
+- [x] SI-03.8 — Endpoint GET /videos/:slug
+- [x] SI-03.9 — Endpoints GET /videos/:slug/stream e /download
+- [x] SI-03.10 — Job de limpeza de rascunhos abandonados
 
 **Full test suites:**
 
-- [ ] Testes unitários e de integração passam (`docker compose exec nestjs-api npm test -- --runInBand`)
-- [ ] Testes E2E passam (`docker compose exec nestjs-api npm run test:e2e`)
-- [ ] Type-check passa (`docker compose exec nestjs-api npx tsc --noEmit`)
-- [ ] Lint passa (`docker compose exec nestjs-api npm run lint`)
+- [x] Testes unitários e de integração passam (`docker compose exec nestjs-api npm test -- --runInBand`)
+- [x] Testes E2E passam (`docker compose exec nestjs-api npm run test:e2e`)
+- [x] Type-check passa (`docker compose exec nestjs-api npx tsc --noEmit`)
+- [x] Lint passa (`docker compose exec nestjs-api npm run lint`)

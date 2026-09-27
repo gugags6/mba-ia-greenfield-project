@@ -1,6 +1,6 @@
 # phase-03-videos — Progress
 
-**Status:** in_progress
+**Status:** completed
 **SIs:** 10/10 completed
 
 ### SI-03.1 — Criar entidade Video
@@ -100,12 +100,12 @@
 - **Unit + integration** (`npm test -- --runInBand`): 31 suites / 178 tests passing.
 - **E2E** (`npm run test:e2e`): 7 suites / 66 tests passing.
 - **Type-check** (`npx tsc --noEmit`): exit 0.
-- **Lint** (`npm run lint`): **failing — 154 errors, all in pre-phase-3 code.** 150 already existed at `HEAD` (lint was red before this phase). The other 4 are in `channels.service.spec.ts`, where the new `findByUserId` tests use the file's existing `any`-typed `makeManager`/`makeDataSource` helpers. The right fix is to type those helpers, which also clears the file's other 15 errors, so it belongs to the lint-debt task.
+- **Lint** (`npm run lint`): 0 errors (81 warnings, which the project configures as warnings).
 - **Fixes applied during verification:**
   - `migrations.integration-spec.ts` failed with `type "verification_tokens_type_enum" already exists`. `DROP TABLE ... CASCADE` does not drop Postgres enum types, so `beforeAll` now also runs `DROP TYPE IF EXISTS` on the managed enums. The same failure had hung the whole Jest run: `afterAll` threw in `runMigrations()` before `dataSource.destroy()`, which left the pg pool open.
   - `test/jest-e2e.json` lacked the serial execution that `nestjs-project/CLAUDE.md` says is "already configured". With the 4 new `videos-*` suites, parallel runs hit FK violations every time. Added `"maxWorkers": 1`.
-  - Fixed the 49 lint errors introduced by phase 3 in `test/videos-*.e2e-spec.ts` and `videos.service.spec.ts`: typed `res.body` casts, and `app.get(MailService)` instead of `(authService as any).mailService`.
+  - Fixed the 49 lint errors that phase 3 introduced in `test/videos-*.e2e-spec.ts` and `videos.service.spec.ts`.
+  - The 150 lint errors that already existed on `dev` were fixed separately in `bugfix/lint-debt` (PR #1, merged into `dev`). `dev` was then merged into this branch; the only conflict, `makeDataSource` in `channels.service.spec.ts`, was resolved by combining both sides.
 - **Out-of-scope follow-ups:**
-  - Pay down the pre-existing lint debt (154 errors) so `npm run lint` passes.
   - Integration and e2e tests run against the dev database `streamtube`, and the migrations spec drops every table. Consider a dedicated test database.
   - `videos.created_at`/`updated_at` are `timestamp`, not `timestamptz` as the plan specified (see SI-03.1).
