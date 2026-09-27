@@ -13,6 +13,9 @@ docker compose ps   # all services must show status "running"
 Then verify each infrastructure service is actually ready to accept connections — not just running:
 
 - **PostgreSQL:** `docker compose exec db pg_isready -U streamtube` — expect `accepting connections`
+- **Redis:** `docker compose exec redis redis-cli ping` — expect `PONG`
+- **MinIO:** `curl -s -o /dev/null -w "%{http_code}" http://localhost:9000/minio/health/ready` — expect `200`
+- **Buckets:** `docker compose ps -a createbuckets` — expect `Exited (0)` (one-shot service that creates the buckets, then exits)
 
 Only start the NestJS dev server (`npm run start:dev`) when the user **explicitly** asks to run the application — never as part of "start the environment".
 
@@ -34,6 +37,13 @@ docker compose exec nestjs-api npm run start:dev
 Services:
 - `nestjs-api` — NestJS API, port `3000`
 - `db` — PostgreSQL 17, port `5432`, database `streamtube`, user/password `streamtube`
+- `mailpit` — SMTP capture, SMTP `1025`, web UI/API `8025`
+- `minio` — S3-compatible object storage, API `9000`, console `9001`, user/password `streamtube`
+- `createbuckets` — one-shot `mc` job that creates the `streamtube-videos` and `streamtube-thumbnails` buckets, then exits
+- `redis` — Redis 7 (BullMQ backend), port `6379`
+- `video-worker` — same image/code as the API plus `ffmpeg` (`Dockerfile.worker`); idles like `nestjs-api` until the worker is started (see below)
+
+Images for MinIO come from `quay.io/minio/*` — the Docker Hub `minio/*` images are no longer available.
 
 All verification and teardown commands run on the **host machine**:
 
@@ -60,6 +70,7 @@ docker compose down
 
 ```bash
 npm run start:dev                        # Dev server with hot-reload
+npm run worker:start                     # Video worker (run in the video-worker container)
 npm run build                            # Compile to dist/
 npm run start:prod                       # Run compiled build
 
@@ -88,10 +99,12 @@ Integration and e2e suites share a single test database. They **must** be run wi
 
 ```bash
 docker compose exec nestjs-api npm test -- --runInBand
-docker compose exec nestjs-api npm run test:e2e   # already configured
+docker compose exec nestjs-api npm run test:e2e   # already serial via "maxWorkers": 1 in test/jest-e2e.json
 ```
 
 Parallel execution causes FK violations, deadlocks, and cross-suite contamination because suites truncate or seed shared tables concurrently.
+
+Storage, queue and video tests run against the real `minio`, `redis` and `ffmpeg` — the project never mocks them. Make sure those services are up (see "Environment Startup Verification") before running the suites.
 
 During active development, run only the tests related to the file being changed (`npm test -- path/to/file.spec.ts`). Before declaring a task done, run the full suite — see the global `CLAUDE.md` → "Definition of Done (Technical)".
 
@@ -99,7 +112,19 @@ During active development, run only the tests related to the file being changed 
 
 Commands that never exit (dev server, watch modes) must be run in background in the Bash tool — otherwise the agent blocks indefinitely waiting for the process to return.
 
-This applies to: `start:dev`, `start:prod`, `test:watch`, and any other persistent process.
+This applies to: `start:dev`, `start:prod`, `test:watch`, `worker:start`, and any other persistent process.
+
+## Video Worker
+
+The worker is a second entrypoint (`src/worker.main.ts` → `WorkerModule`) that consumes the BullMQ queues `video-processing` (ffprobe metadata + ffmpeg thumbnail) and `video-cleanup` (hourly removal of abandoned drafts). Start it explicitly:
+
+```bash
+docker compose exec video-worker npm run worker:start
+```
+
+It runs through `ts-node`, not `nest start`: `nest-cli.json` has `deleteOutDir: true`, so two concurrent `nest start --watch` processes (API + worker) would keep wiping each other's `dist/`.
+
+`WorkerModule` does not import `AppModule`. Anything the worker needs (config namespaces, `TypeOrmModule.forFeature`, `BullModule.registerQueue`, modules that register related entities) must be imported in `WorkerModule` itself — a dependency that resolves fine in the API can fail only in the worker.
 
 ## Test Type Selection
 
@@ -136,11 +161,19 @@ MAIL_FROM=StreamTube <noreply@streamtube.local>
 MAIL_FROM="StreamTube <noreply@streamtube.local>"
 ```
 
+Service connection variables follow the Docker networking rule (Compose service names as hosts): `DB_*`, `MAIL_*`, `STORAGE_*` (`STORAGE_ENDPOINT=http://minio:9000`, credentials, bucket names) and `REDIS_*` (`REDIS_HOST=redis`). Every new variable must also be declared in `src/config/env.validation.ts`.
+
 Whenever possible, prefer storing only the bare address in `.env` and composing display names in code (e.g., in `mail.config.ts`) so the file stays shell-safe.
 
 ## Build Assets
 
 `tsc` (and therefore `nest build`) only emits compiled `.ts` files to `dist/`. Any non-TypeScript runtime asset — Handlebars templates (`.hbs`), JSON fixtures, static config files, etc. — must be declared in `nest-cli.json` under `compilerOptions.assets` (with `watchAssets: true` for dev). Without that, the file exists in `src/` but is missing in `dist/` and runtime fails only after build.
+
+## Queues (BullMQ)
+
+- `bullmq` needs `ioredis` installed explicitly — it is an optional peer dependency and BullMQ fails at module load without it.
+- A queue registered with `BullModule.registerQueue` in one module is not visible to other modules: every module that uses `@InjectQueue(...)` or `@Processor(...)` must register that queue itself. Queue names live in `src/queue/queue.constants.ts`.
+- Repeatable jobs use `queue.upsertJobScheduler(...)`. The installed BullMQ (v6) no longer accepts `repeat` in `queue.add()` options.
 
 ## Architecture
 
