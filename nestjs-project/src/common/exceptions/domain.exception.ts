@@ -48,3 +48,31 @@ export class TokenReuseDetectedException extends DomainException {
     );
   }
 }
+
+export class ChannelNotFoundException extends DomainException {
+  constructor() {
+    super('CHANNEL_NOT_FOUND', 404, 'Authenticated user has no channel');
+  }
+}
+
+export class VideoNotFoundException extends DomainException {
+  constructor() {
+    super('VIDEO_NOT_FOUND', 404, 'Video not found');
+  }
+}
+
+export class UnauthorizedVideoAccessException extends DomainException {
+  constructor() {
+    super(
+      'UNAUTHORIZED_VIDEO_ACCESS',
+      403,
+      'You do not have access to this video',
+    );
+  }
+}
+
+export class InvalidVideoStateException extends DomainException {
+  constructor(message = 'Video is not in a valid state for this operation') {
+    super('INVALID_VIDEO_STATE', 409, message);
+  }
+}

@@ -75,7 +75,7 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 ### SI-03.3 — Endpoint POST /videos/upload-intent
 
 **Route:** POST /videos/upload-intent
-**Test Specs:** _pending /plan-test-specs_
+**Test Specs:** see `nestjs-project/specs/videos-upload-intent.plan.md`
 
 **Description:** Ponto de entrada do upload — valida o canal do usuário, gera o slug público, cria o rascunho e inicia a sessão multipart, devolvendo as URLs presigned por parte.
 
@@ -90,8 +90,6 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 
 | Artifact | Layer | Test file |
 |----------|-------|-----------|
-| `UploadIntentDto` | E2E: wiring de validação (allowlist de `mimeType`, limites de `sizeBytes`) | `videos.e2e-spec.ts` |
-| `VideosController` | E2E only | `videos.e2e-spec.ts` |
 | `VideosService` | Unit: branch logic (mock repo + mock `StorageService`) | `videos.service.spec.ts` |
 
 **Dependencies:** SI-03.1 (entidade), SI-03.2 (StorageService)
@@ -108,7 +106,7 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 ### SI-03.4 — Endpoint POST /videos/:slug/confirm-upload
 
 **Route:** POST /videos/:slug/confirm-upload
-**Test Specs:** _pending /plan-test-specs_
+**Test Specs:** see `nestjs-project/specs/videos-confirm-upload.plan.md`
 
 **Description:** Finaliza a sessão multipart no storage e enfileira o job de processamento assíncrono — transição de `draft` para `uploaded`.
 
@@ -124,7 +122,6 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 
 | Artifact | Layer | Test file |
 |----------|-------|-----------|
-| `VideosController` | E2E only | `videos.e2e-spec.ts` |
 | `VideosService` | Unit: branch logic (draft/não-draft, dono/não-dono) | `videos.service.spec.ts` |
 | `VideosService` (fila) | Integration: real BullMQ via Docker (per `phase-03-videos/TD-09`) — assert job enfileirado com payload correto | `videos.service.integration-spec.ts` |
 
@@ -224,7 +221,7 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 ### SI-03.8 — Endpoint GET /videos/:slug
 
 **Route:** GET /videos/:slug
-**Test Specs:** _pending /plan-test-specs_
+**Test Specs:** see `nestjs-project/specs/videos-detail.plan.md`
 
 **Description:** Leitura de metadados de um vídeo, respeitando a regra de visibilidade por status — pública quando `ready`, restrita ao dono caso contrário.
 
@@ -238,7 +235,6 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 
 | Artifact | Layer | Test file |
 |----------|-------|-----------|
-| `VideosController` | E2E only | `videos.e2e-spec.ts` |
 | `VideosService` | Unit: branch logic (`ready`/não-`ready`, dono/não-dono) | `videos.service.spec.ts` |
 
 **Dependencies:** SI-03.1
@@ -254,7 +250,7 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 ### SI-03.9 — Endpoints GET /videos/:slug/stream e /download
 
 **Route:** GET /videos/:slug/stream, GET /videos/:slug/download
-**Test Specs:** _pending /plan-test-specs_
+**Test Specs:** see `nestjs-project/specs/videos-delivery.plan.md`
 
 **Description:** Entrega do vídeo via redirect para URLs presigned — a API nunca proxeia os bytes, tanto para reprodução em streaming quanto para download.
 
@@ -268,7 +264,6 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 
 | Artifact | Layer | Test file |
 |----------|-------|-----------|
-| `VideosController` | E2E only | `videos.e2e-spec.ts` |
 | `VideosService` | Unit: branch logic (checagem de `ready`, geração de URL) | `videos.service.spec.ts` |
 
 **Dependencies:** SI-03.1, SI-03.2, SI-03.8
@@ -476,8 +471,6 @@ Implementar a ingestão, o armazenamento e o processamento assíncrono de vídeo
 **Delivery semantics:** at-least-once — idempotent by construction (aborting an already-aborted multipart session, or deleting an already-deleted `draft` row, is a no-op)
 
 ---
-
-<!-- phase-a-complete -->
 
 ## Dependency Map
 
